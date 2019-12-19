@@ -7,7 +7,7 @@ function Chart(props) {
   const datasets = props.years.map((year, index) => ({
     label: year.label,
     backgroundColor: color.rotate(index / props.years.length * 360).rgb().string(),
-    data: year.months
+    data: [ ...year.months ]
   }));
   return (
     <Bar

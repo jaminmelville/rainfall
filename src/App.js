@@ -16,19 +16,29 @@ export default class App extends React.Component {
     Papa.parse(`https://docs.google.com/spreadsheets/d/${process.env.REACT_APP_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Sheet1`, {
       download: true,
       complete: (results) => {
-        const data = {
-          average: {
-            months: Array(12).fill(0),
-            year: { 
-              total: 0,
-              records: 0,
-              days: 0
-            }
+        const data = {};
+        const averages = {
+          months: Array(12).fill(0),
+          year: { 
+            total: 0,
+            records: 0,
+            days: 0
           }
-        }
-        const start = moment('2001-01-01');
+        };
+        results.data.shift();
+        const readings = results.data
+          .filter(reading => !isNaN(parseFloat(reading[1])))
+          .map(reading => ({
+            date: moment(reading[0], 'DD/MM/YYYY'),
+            amount: parseFloat(reading[1]),
+            extraDays: isNaN(parseInt(reading[2])) ? 0 : parseInt(reading[2]),
+          }))
+          .sort((a, b) => Math.sign(a.date - b.date));
+        const dates = readings.map(reading => reading.date);
+        const start = moment(moment.min(dates)).startOf('year');
+        const end = moment(moment.max(dates)).endOf('year');        
         const time = moment(start);
-        while (time < moment()) {
+        while (time <= end) {
           const year = time.format('YYYY');
           data[year] = {
             label: year,
@@ -36,42 +46,34 @@ export default class App extends React.Component {
             stats: {
               total: 0,
               records: 0,
-              days: 0
+              days: 0,
             }
           };
           time.add(1, 'year');
         }
-        results['data'].shift();
-        results['data'].forEach((day) => {
-          const amount = parseFloat(day[1]);
-          const date = moment(day[0], 'DD/MM/YYYY');
-          const year = date.format('YYYY');
-          const month = parseInt(date.format('M')) - 1;
-          if (!isNaN(amount)) {
-            data['average']['months'][month] += amount;
-            data['average']['year']['total'] += amount;
-            data[year]['months'][month] += amount;
-            data[year]['stats']['total'] += amount;
-            data[year]['stats']['records'] += 1;
-            data['average']['year']['records'] += 1;
-            data[year]['stats']['days'] += 1;
-            data['average']['year']['days'] += 1;
-            const extra = parseInt(day[2]);
-            if (!isNaN(extra)) {
-              data[year]['stats']['days'] += extra;
-              data['average']['year']['days'] += extra;
-            }
-          }
+        readings.forEach((reading) => {
+          const year = reading.date.format('YYYY');
+          const month = parseInt(reading.date.format('M')) - 1;
+          averages['months'][month] += reading.amount;
+          averages['year']['total'] += reading.amount;
+          data[year]['months'][month] += reading.amount;
+          data[year]['stats']['total'] += reading.amount;
+          data[year]['stats']['records'] += 1;
+          averages['year']['records'] += 1;
+          data[year]['stats']['days'] += 1;
+          averages['year']['days'] += 1;
+          data[year]['stats']['days'] += reading.extraDays;
+          averages['year']['days'] += reading.extraDays;
         });
-        data['average']['months'].forEach((month, index) => {
+        averages['months'].forEach((month, index) => {
           const count = moment().diff(moment(start).month(index), 'years');
-          data['average']['months'][index] /= count;
+          averages['months'][index] /= count;
         });
         const count = moment().diff(start, 'years', true);
-        data['average']['year']['total'] /= count;
-        data['average']['year']['records'] /= count;
-        data['average']['year']['days'] /= count;
-        this.setState({ data });
+        averages['year']['total'] /= count;
+        averages['year']['records'] /= count;
+        averages['year']['days'] /= count;
+        this.setState({ data, start, end, readings, averages });
       }
     });
   }
@@ -82,21 +84,26 @@ export default class App extends React.Component {
     }
     return (
       <div className="container">
-        <h1 className="text-center">Rainfall</h1>
+        <h1 className="text-center">Wongaling Beach Rainfall</h1>
         <hr className="my-4"/>
         <Years
           onChange={years => this.setState({ years })}
           value={this.state.years}
+          min={this.state.start}
+          max={this.state.end}
         />
         <hr className="my-4"/>
         <Chart
           years={this.state.years.map(year => this.state.data[year])}
-          average={this.state.data.average}
+          average={this.state.averages}
         />
         <hr className="my-4"/>
         <Stats
           years={this.state.years.map(year => this.state.data[year])}
-          average={this.state.data.average}
+          average={this.state.averages}
+          latest={this.state.readings[this.state.readings.length - 1]}
+          highestDay={this.state.readings.filter(r => r.extraDays === 0).reduce((p, c) => p.amount > c.amount ? p : c)}
+          highestYear={Object.values(this.state.data).reduce((p, c) => p.stats.total > c.stats.total ? p : c)}
         />
       </div>
     );

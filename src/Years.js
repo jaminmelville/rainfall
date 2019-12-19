@@ -5,9 +5,9 @@ import moment from 'moment';
 
 function Years(props) {
   const color = Color({ r: 255, g: 127, b: 127 });
-  const time = moment('2001-01-01');
+  const time = moment(props.min);
   const allYears = [];
-  while (time < moment()) {
+  while (time <= props.max) {
     allYears.unshift(time.format('YYYY'));
     time.add(1, 'year');
   }
@@ -25,10 +25,10 @@ function Years(props) {
           onClick={(e) => {
             if (!isSelected && e.ctrlKey) {
               props.onChange([ ...props.value, year ].sort());
-            } else if (!isSelected) {
-              props.onChange([ year ]);
+            } else if (e.ctrlKey && props.value.length > 1) {
+              props.onChange(props.value.filter(value => value !== year));
             } else {
-              props.onChange(props.value.filter(item => item !== year));
+              props.onChange([ year ]);
             }
           }}
         >
@@ -46,9 +46,14 @@ function Years(props) {
     )
   })
   return (
-    <ul className="list-unstyled m-n1 d-flex justify-content-center flex-wrap">
-      {years}
-    </ul>
+    <>
+      <ul className="list-unstyled m-n1 d-flex justify-content-center flex-wrap">
+        {years}
+      </ul>
+      <div className="text-right">
+        <small>Hold down CTRL to select multiple years</small>
+      </div>
+    </>
   );
 }
 
