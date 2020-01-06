@@ -25,36 +25,52 @@ function Stats(props) {
   ));
   return (
     <>
-      <p>
-        <ul>
-          <li>
-            The <strong>most recent rain</strong> was 
-            <strong> {props.latest.date.fromNow()} </strong>
-            on the 
-            <strong> {props.latest.date.format('Mo MMMM')} </strong>
-            when it rained 
-            <strong> {props.latest.amount}mm</strong>
-          </li>
-          <li>
-            <strong>{props.highestDay.amount}mm </strong>
-            of rain fell 
-            <strong> {props.highestDay.date.fromNow()} </strong>
-            on the
-            <strong> {props.highestDay.date.format('Mo MMMM YYYY')} </strong>
-            making it the 
-            <strong> wettest day </strong> 
-            on record
-          </li>
-          <li>
-            The 
-            <strong> most rainfall for a year </strong>
-            was in 
-            <strong> {props.highestYear.label} </strong>
-            when it totalled 
-            <strong> {props.highestYear.stats.total}mm</strong>
-          </li>
-        </ul>
-      </p>
+      <ul>
+        <li>
+          The <strong>most recent rain</strong> was 
+          <strong> {props.latest.date.fromNow()} </strong>
+          on the 
+          <strong> {props.latest.date.format('Do MMMM')} </strong>
+          when it rained 
+          <strong> {props.latest.amount}mm</strong>
+        </li>
+        <li>
+          <strong>{props.highestDay.amount}mm </strong>
+          of rain fell 
+          <strong> {props.highestDay.date.fromNow()} </strong>
+          on the
+          <strong> {props.highestDay.date.format('Do MMMM YYYY')} </strong>
+          making it the 
+          <strong> wettest day </strong> 
+          on record
+        </li>
+        <li>
+          The 
+          <strong> most rainfall for a year </strong>
+          was in 
+          <strong> {props.highestYear.label} </strong>
+          when it totalled 
+          <strong> {props.highestYear.stats.total}mm</strong>
+        </li>
+        <li>
+          The 
+          <strong> least rainfall for a year </strong>
+          was in 
+          <strong> {props.lowestYear.label} </strong>
+          when it totalled 
+          <strong> {props.lowestYear.stats.total}mm</strong>
+        </li>
+        <li>
+          The 
+          <strong> most consecutive rainy days </strong>
+          recorded was           
+          <strong> {props.longestRun.length} </strong>
+          between 
+          <strong> {props.longestRun.start.format('DD MMM YYYY')} </strong>
+          and 
+          <strong> {props.longestRun.end.format('DD MMM YYYY')} </strong>
+        </li>
+      </ul>
       <table className="table">
         <thead className="thead-dark">
           <tr>

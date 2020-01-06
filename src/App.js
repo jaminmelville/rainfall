@@ -8,7 +8,6 @@ import Stats from './Stats';
 export default class App extends React.Component {
 
   state = {
-    years: [ moment().format('YYYY') ],
     data: false
   }
 
@@ -27,7 +26,7 @@ export default class App extends React.Component {
         };
         results.data.shift();
         const readings = results.data
-          .filter(reading => !isNaN(parseFloat(reading[1])))
+          .filter(reading => !isNaN(parseFloat(reading[1])) && parseFloat(reading[1]) > 0)
           .map(reading => ({
             date: moment(reading[0], 'DD/MM/YYYY'),
             amount: parseFloat(reading[1]),
@@ -73,7 +72,28 @@ export default class App extends React.Component {
         averages['year']['total'] /= count;
         averages['year']['records'] /= count;
         averages['year']['days'] /= count;
-        this.setState({ data, start, end, readings, averages });
+
+        let longestRun = {
+          start: start,
+          end: start,
+          length: 0
+        };
+        let run = { ...longestRun };
+        readings.forEach((reading) => {
+          if (reading.date.diff(run.end, 'days') === 1) {
+            run.length += 1;
+            run.end = reading.date;
+          } else {
+            run.length = 0;
+            run.start = reading.date;
+            run.end = reading.date;
+          }
+          if (run.length > longestRun.length) {
+            longestRun = { ...run };
+          } 
+        });
+        const years = [ end.format('YYYY') ];
+        this.setState({ data, start, end, readings, averages, longestRun, years });
       }
     });
   }
@@ -102,8 +122,12 @@ export default class App extends React.Component {
           years={this.state.years.map(year => this.state.data[year])}
           average={this.state.averages}
           latest={this.state.readings[this.state.readings.length - 1]}
+          longestRun={this.state.longestRun}
           highestDay={this.state.readings.filter(r => r.extraDays === 0).reduce((p, c) => p.amount > c.amount ? p : c)}
           highestYear={Object.values(this.state.data).reduce((p, c) => p.stats.total > c.stats.total ? p : c)}
+          lowestYear={Object.values(this.state.data)
+            .filter(year => ['1999', '2000', moment().format('YYYY')].indexOf(year.label) < 0)
+            .reduce((p, c) => p.stats.total < c.stats.total ? p : c)}
         />
       </div>
     );
