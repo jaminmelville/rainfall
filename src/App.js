@@ -28,7 +28,7 @@ export default class App extends React.Component {
         const readings = results.data
           .filter(reading => !isNaN(parseFloat(reading[1])) && parseFloat(reading[1]) > 0)
           .map(reading => ({
-            date: moment(reading[0], 'DD/MM/YYYY'),
+            date: moment(reading[0], 'DD/MM/YYYY').hour(9),
             amount: parseFloat(reading[1]),
             extraDays: isNaN(parseInt(reading[2])) ? 0 : parseInt(reading[2]),
           }))
